@@ -1,0 +1,32 @@
+name: APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Proje zip dosyasını aç
+        run: |
+          for z in *.zip; do [ -f "$z" ] && unzip -o -q "$z"; done
+          test -f settings.gradle
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+      - name: APK derle
+        run: gradle assembleDebug --no-daemon
+      - name: APK adını ayarla
+        run: cp app/build/outputs/apk/debug/app-debug.apk HavamizOlsun.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.run_number }}
+          name: Havamız Olsun ${{ github.run_number }}
+          files: HavamizOlsun.apk
